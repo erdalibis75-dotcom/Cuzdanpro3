@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- PWA Ayarları -->
+  <link rel="manifest" href="/cuzdanpro3/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="apple-touch-icon" href="/cuzdanpro3/icons/icon-192.png">
+  
+  <title>Cüzdan Pro</title>
+  <link href="https://googleapis.com" rel="stylesheet">
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: #0a0a0a; color: #f0ede8; padding: 15px; padding-bottom: 140px; }
+    .pos { color: #34d399 !important; } 
+    .neg { color: #f87171 !important; } 
+    .card { background: #1a1a1a; border-radius: 24px; padding: 20px; border: 1px solid #222; margin-bottom: 15px; text-align: center; }
+    .main-total-card { border-color: #7c3aed66; background: linear-gradient(145deg, #1e1e1e, #111); }
+    .person-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .person-box { background: #161616; border: 1px solid #333; border-radius: 18px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .person-box.active { border-color: #7c3aed; background: #7c3aed11; transform: scale(1.03); }
+    .person-name { font-size: 11px; font-weight: 900; opacity: 0.5; margin-bottom: 5px; text-transform: uppercase; }
+    .person-val { font-size: 13px; font-weight: 900; }
+    .sub-val { font-size: 10px; font-weight: 800; margin-top: 4px; border-top: 1px solid #222; padding-top: 4px; }
+    .month-filter-card { background: #111; border: 1px dashed #333; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
+    .month-select { width: 100%; background: #000; border-radius: 12px; padding: 10px; color: #7c3aed; border: 1px solid #7c3aed44; font-weight: 800; outline: none; text-align: center; appearance: none; }
+    .search-result-card { background: #7c3aed11; border: 1px solid #7c3aed44; padding: 12px; border-radius: 16px; margin-bottom: 15px; display: none; text-align: center; }
+    .bottom-controls { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #222; margin-top: 20px; }
+    .aud-input { background: #1a1a1a; border: 1px solid #7c3aed; color: #7c3aed; font-weight: 800; width: 75px; text-align: center; border-radius: 8px; padding: 4px; outline: none; margin-top: 5px; }
+    .btn-mini { background: none; border: 1px solid #333; color: #666; padding: 6px; border-radius: 8px; font-size: 9px; font-weight: 800; cursor: pointer; width: 100px; margin-bottom: 4px; display: block; }
+    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #161616; border-radius: 20px; margin-bottom: 8px; border: 1px solid #222; }
+    .input-field { width: 100%; background: #222; border-radius: 14px; padding: 16px; color: #fff; border: 1px solid #333; margin-bottom: 12px; font-size: 16px; outline: none; }
+    .btn-save { background: #7c3aed; color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 900; cursor: pointer; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #222; z-index: 1000; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+  </style>
+</head>
+<body>
+
+  <div id="home-view">
+    <div class="card main-total-card">
+      <div style="font-size:10px; opacity:0.5; font-weight:900">GENEL DURUM</div>
+      <h1 id="global-balance" style="font-size:32px; margin:5px 0">0 ₺</h1>
+      <div id="global-month-sub" class="sub-val" style="font-size:14px; border:none">Ay: 0 ₺</div>
+      <div id="global-aud" style="color:#7c3aed; font-weight:800; font-size:12px; margin-top:5px">≈ 0 AUD</div>
+    </div>
+
+    <div class="person-grid" id="person-grid"></div>
+
+    <div class="month-filter-card">
+      <select id="month-filter" class="month-select" onchange="renderHome()"></select>
+    </div>
+
+    <div id="search-result-box" class="search-result-card">
+       <div style="font-size:9px; font-weight:900; opacity:0.6; color:#7c3aed; margin-bottom:4px">ARAMA SONUCU TOPLAMI</div>
+       <div id="search-total-val" style="font-size:18px; font-weight:900">0 ₺</div>
+    </div>
+
+    <div id="person-detail-area" style="display:none">
+       <input type="text" id="search-input" placeholder="İşlemlerde ara..." style="width:100%; background:#161616; border:1px solid #333; padding:12px; border-radius:12px; color:#fff; margin-bottom:10px; outline:none;" oninput="renderHome()">
+       <div id="history-container"></div>
+    </div>
+
+    <div class="bottom-controls">
+      <div class="rate-info">
+        <div style="font-size:9px; font-weight:800; opacity:0.5">AUD KURU</div>
+        <input type="number" id="rate-input" step="0.0001" value="0.0318" class="aud-input">
+      </div>
+      <div class="json-actions">
+        <button class="btn-mini" onclick="exportJSON()">📥 YEDEKLE</button>
+        <button class="btn-mini" onclick="document.getElementById('import-file').click()">📤 YÜKLE</button>
+        <input type="file" id="import-file" style="display:none" onchange="importJSON(event)" accept=".json">
+      </div>
+    </div>
+  </div>
+
+  <div id="add-view" style="display:none">
+    <h2 style="margin-bottom:20px">İşlem Ekle</h2>
+    <select id="f-type" class="input-field"><option value="expense">Gider (-)</option><option value="income">Gelir (+)</option></select>
+    <select id="f-person" class="input-field"></select>
+    <input type="date" id="f-date" class="input-field">
+    <input type="number" id="f-amount" placeholder="Tutar (₺)" class="input-field">
+    <input type="text" id="f-note" placeholder="Açıklama" class="input-field">
+    <button class="btn-save" onclick="addTx()">KAYDET</button>
+    <button onclick="showView('home')" style="width:100%; background:none; border:none; color:#666; margin-top:20px; font-weight:700">İPTAL</button>
+  </div>
+
+  <div class="nav-bar">
+    <div onclick="showView('home')" style="text-align:center; cursor:pointer"><div style="font-size:20px">📊</div><div style="font-size:10px; font-weight:800">ÖZET</div></div>
+    <div onclick="showView('add')" style="text-align:center; cursor:pointer"><div style="font-size:20px">➕</div><div style="font-size:10px; font-weight:800">EKLE</div></div>
+  </div>
+
+<script>
+  let txs = JSON.parse(localStorage.getItem('txs_v2') || '[]');
+  const people = ["Erdal", "A.A", "N.A"];
+  let activeTab = null, rate = 0.0318;
+  const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+  function init() {
+    const pSelect = document.getElementById('f-person');
+    people.forEach(p => pSelect.innerHTML += `<option value="${p}">${p}</option>`);
+    document.getElementById('f-date').valueAsDate = new Date();
+    document.getElementById('rate-input').oninput = (e) => { rate = parseFloat(e.target.value) || 0; renderHome(); };
+    updateMonthDropdown();
+    renderHome();
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/cuzdanpro3/sw.js')
+        .then(() => console.log("SW Kayıtlı"))
+        .catch(err => console.log("SW Hatası", err));
+    }
+  }
+
+  function getBal(data) {
+    return data.reduce((acc, t) => t.type === 'income' ? acc + parseFloat(t.amount) : acc - parseFloat(t.amount), 0);
+  }
+
+  function updateMonthDropdown() {
+    const dropdown = document.getElementById('month-filter');
+    const uniqueMonths = [...new Set(txs.map(t => {
+      const d = new Date(t.date);
+      return `${months[d.getMonth()]} ${d.getFullYear()}`;
+    }))].sort((a, b) => new Date(b) - new Date(a));
+    
+    let options = `<option value="Hepsi">Tüm Zamanlar</option>`;
+    uniqueMonths.forEach(m => options += `<option value="${m}">${m}</option>`);
+    dropdown.innerHTML = options;
+  }
+
+  function renderHome() {
+    const selectedMonth = document.getElementById('month-filter').value;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    
+    let filtered = txs;
+    if (selectedMonth !== "Hepsi") {
+      filtered = txs.filter(t => {
+        const d = new Date(t.date);
+        return `${months[d.getMonth()]} ${d.getFullYear()}` === selectedMonth;
+      });
+    }
+
+    const globalTotal = getBal(txs);
+    const monthTotal = getBal(filtered);
+    
+    document.getElementById('global-balance').innerText = `${globalTotal.toLocaleString('tr-TR')} ₺`;
+    document.getElementById('global-month-sub').innerText = `Bu Dönem: ${monthTotal.toLocaleString('tr-TR')} ₺`;
+    document.getElementById('global-aud').innerText = `≈ ${(globalTotal * rate).toFixed(2)} AUD`;
+
+    const grid = document.getElementById('person-grid');
+    grid.innerHTML = '';
+    people.forEach(p => {
+      const pTxs = txs.filter(t => t.person === p);
+      const pMonthTxs = filtered.filter(t => t.person === p);
+      const total = getBal(pTxs);
+      const mTotal = getBal(pMonthTxs);
+      
+      grid.innerHTML += `
+        <div class="person-box ${activeTab === p ? 'active' : ''}" onclick="selectPerson('${p}')">
+          <div class="person-name">${p}</div>
+          <div class="person-val ${total >= 0 ? 'pos' : 'neg'}">${total.toLocaleString('tr-TR')} ₺</div>
+          <div class="sub-val ${mTotal >= 0 ? 'pos' : 'neg'}">${mTotal.toLocaleString('tr-TR')} ₺</div>
+        </div>`;
+    });
+    renderHistory(filtered, searchTerm);
+  }
+
+  function selectPerson(p) {
+    activeTab = (activeTab === p) ? null : p;
+    document.getElementById('person-detail-area').style.display = activeTab ? 'block' : 'none';
+    renderHome();
+  }
+
+  function renderHistory(data, search) {
+    const container = document.getElementById('history-container');
+    const searchBox = document.getElementById('search-result-box');
+    let list = activeTab ? data.filter(t => t.person === activeTab) : [];
+    
+    if (search) {
+      list = list.filter(t => t.note.toLowerCase().includes(search));
+      const sTotal = getBal(list);
+      searchBox.style.display = 'block';
+      document.getElementById('search-total-val').innerText = `${sTotal.toLocaleString('tr-TR')} ₺`;
+    } else {
+      searchBox.style.display = 'none';
+    }
+
+    container.innerHTML = list.slice().reverse().map(t => `
+      <div class="tx-row">
+        <div>
+          <div style="font-size:13px; font-weight:800">${t.note || 'İşlem'}</div>
+          <div style="font-size:10px; opacity:0.5">${new Date(t.date).toLocaleDateString('tr-TR')}</div>
+        </div>
+        <div class="${t.type === 'income' ? 'pos' : 'neg'}" style="font-weight:900">
+          ${t.type === 'income' ? '+' : '-'}${parseFloat(t.amount).toLocaleString('tr-TR')} ₺
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function addTx() {
+    const amount = document.getElementById('f-amount').value;
+    const note = document.getElementById('f-note').value;
+    if (!amount) return alert("Tutar giriniz!");
+
+    txs.push({
+      id: Date.now(),
+      type: document.getElementById('f-type').value,
+      person: document.getElementById('f-person').value,
+      date: document.getElementById('f-date').value,
+      amount: amount,
+      note: note
+    });
+
+    localStorage.setItem('txs_v2', JSON.stringify(txs));
+    updateMonthDropdown();
+    showView('home');
+    renderHome();
+    document.getElementById('f-amount').value = '';
+    document.getElementById('f-note').value = '';
+  }
+
+  function showView(v) {
+    document.getElementById('home-view').style.display = v === 'home' ? 'block' : 'none';
+    document.getElementById('add-view').style.display = v === 'add' ? 'block' : 'none';
+  }
+
+  function exportJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(txs));
+    const dlAnchorElem = document.createElement('a');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", `cuzdan_yedek.json`);
+    dlAnchorElem.click();
+  }
+
+  function importJSON(e) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      txs = JSON.parse(event.target.result);
+      localStorage.setItem('txs_v2', JSON.stringify(txs));
+      updateMonthDropdown();
+      renderHome();
+    };
+    reader.readAsText(e.target.files);
+  }
+
+  init();
+</script>
+</body>
+  </html>
+
+  
