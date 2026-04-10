@@ -1,11 +1,9 @@
 
-
-
 {
   "name": "Cüzdan Pro",
   "short_name": "Cüzdan",
   "description": "Aile Finans",
-  "start_url": "/cuzdanpro3/",
+  "start_url": "/index.html/",
   "scope": "/cuzdanpro3/",
   "display": "standalone",
   "orientation": "portrait",
