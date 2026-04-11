@@ -103,10 +103,11 @@
     updateMonthDropdown();
     renderHome();
     
+    // Service Worker Kayıt (Düzeltilmiş Yol)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/cuzdanpro3/service-worker.js')
-        .then(() => console.log("SW Kayıtlı"))
-        .catch(err => console.log("SW Hatası", err));
+        .then(() => console.log("PWA Kayıt Başarılı"))
+        .catch(err => console.log("PWA Hatası:", err));
     }
   }
 
@@ -131,7 +132,6 @@
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const rate = parseFloat(document.getElementById('rate-input').value) || 0;
 
-    // Ana Filtreleme
     let filtered = txs.filter(t => {
       const d = new Date(t.date);
       const mText = `${months[d.getMonth()]} ${d.getFullYear()}`;
@@ -140,7 +140,6 @@
       return matchesMonth && matchesSearch;
     });
 
-    // Toplamlar
     const totalBal = getBal(txs);
     const currentMonthBal = getBal(txs.filter(t => {
         const d = new Date(t.date);
@@ -152,7 +151,6 @@
     document.getElementById('global-month-sub').innerText = selectedMonth === "Hepsi" ? "Tüm Zamanlar" : `Ay: ${currentMonthBal.toLocaleString('tr-TR')} ₺`;
     document.getElementById('global-aud').innerText = `≈ ${(totalBal * rate).toFixed(2)} AUD`;
 
-    // Person Grid
     const grid = document.getElementById('person-grid');
     grid.innerHTML = '';
     people.forEach(p => {
@@ -174,7 +172,6 @@
       grid.appendChild(box);
     });
 
-    // Detay Listesi
     const detailArea = document.getElementById('person-detail-area');
     const historyCont = document.getElementById('history-container');
     const searchResBox = document.getElementById('search-result-box');
@@ -269,6 +266,5 @@
 
   init();
 </script>
-
 </body>
 </html>
