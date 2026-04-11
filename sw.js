@@ -1,34 +1,34 @@
-const CACHE_NAME = 'cuzdan-v4'; // Versiyonu v4 yaptık ki tarayıcı yenilesin
-const urlsToCache = [
-  '/Cuzdanpro3/',
-  '/Cuzdanpro3/index.html',
-  'https://googleapis.com'
+const CACHE_NAME = 'cuzdan-pro-v1';
+const FILES_TO_CACHE = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(names => Promise.all(
-      names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))
-    ))
-  );
-  self.clients.claim();
-});
-
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(res => {
-      return res || fetch(event.request).catch(() => {
-        if (event.request.destination === 'document') {
-          return caches.match('/Cuzdanpro3/index.html');
-        }
-      });
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
     })
   );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
 });
