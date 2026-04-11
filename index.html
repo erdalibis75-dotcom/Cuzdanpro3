@@ -2,18 +2,14 @@
 <html lang="tr">
 <head>
   <link rel="manifest" href="./manifest.json">
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
-  
-  
-  
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <title>Cüzdan Pro</title>
-  <link href="https://googleapis.com" rel="stylesheet">
-  
+  <!-- DÜZELTİLDİ: Google Fonts doğru link -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: #0a0a0a; color: #f0ede8; padding: 15px; padding-bottom: 140px; }
@@ -42,58 +38,58 @@
 </head>
 <body>
 
-  <div id="home-view">
-    <div class="card main-total-card">
-      <div style="font-size:10px; opacity:0.5; font-weight:900">GENEL DURUM</div>
-      <h1 id="global-balance" style="font-size:32px; margin:5px 0">0 ₺</h1>
-      <div id="global-month-sub" class="sub-val" style="font-size:14px; border:none">Ay: 0 ₺</div>
-      <div id="global-aud" style="color:#7c3aed; font-weight:800; font-size:12px; margin-top:5px">≈ 0 AUD</div>
-    </div>
-
-    <div class="person-grid" id="person-grid"></div>
-
-    <div class="month-filter-card">
-      <select id="month-filter" class="month-select" onchange="renderHome()"></select>
-    </div>
-
-    <div id="search-result-box" class="search-result-card">
-       <div style="font-size:9px; font-weight:900; opacity:0.6; color:#7c3aed; margin-bottom:4px">ARAMA SONUCU TOPLAMI</div>
-       <div id="search-total-val" style="font-size:18px; font-weight:900">0 ₺</div>
-    </div>
-
-    <div id="person-detail-area" style="display:none">
-       <input type="text" id="search-input" placeholder="İşlemlerde ara..." style="width:100%; background:#161616; border:1px solid #333; padding:12px; border-radius:12px; color:#fff; margin-bottom:10px; outline:none;" oninput="renderHome()">
-       <div id="history-container"></div>
-    </div>
-
-    <div class="bottom-controls">
-      <div class="rate-info">
-        <div style="font-size:9px; font-weight:800; opacity:0.5">AUD KURU</div>
-        <input type="number" id="rate-input" step="0.0001" value="0.0318" class="aud-input">
-      </div>
-      <div class="json-actions">
-        <button class="btn-mini" onclick="exportJSON()">📥 YEDEKLE</button>
-        <button class="btn-mini" onclick="document.getElementById('import-file').click()">📤 YÜKLE</button>
-        <input type="file" id="import-file" style="display:none" onchange="importJSON(event)" accept=".json">
-      </div>
-    </div>
+<div id="home-view">
+  <div class="card main-total-card">
+    <div style="font-size:10px; opacity:0.5; font-weight:900">GENEL DURUM</div>
+    <h1 id="global-balance" style="font-size:32px; margin:5px 0">0 ₺</h1>
+    <div id="global-month-sub" class="sub-val" style="font-size:14px; border:none">Ay: 0 ₺</div>
+    <div id="global-aud" style="color:#7c3aed; font-weight:800; font-size:12px; margin-top:5px">≈ 0 AUD</div>
   </div>
 
-  <div id="add-view" style="display:none">
-    <h2 style="margin-bottom:20px">İşlem Ekle</h2>
-    <select id="f-type" class="input-field"><option value="expense">Gider (-)</option><option value="income">Gelir (+)</option></select>
-    <select id="f-person" class="input-field"></select>
-    <input type="date" id="f-date" class="input-field">
-    <input type="number" id="f-amount" placeholder="Tutar (₺)" class="input-field">
-    <input type="text" id="f-note" placeholder="Açıklama" class="input-field">
-    <button class="btn-save" onclick="addTx()">KAYDET</button>
-    <button onclick="showView('home')" style="width:100%; background:none; border:none; color:#666; margin-top:20px; font-weight:700">İPTAL</button>
+  <div class="person-grid" id="person-grid"></div>
+
+  <div class="month-filter-card">
+    <select id="month-filter" class="month-select" onchange="renderHome()"></select>
   </div>
 
-  <div class="nav-bar">
-    <div onclick="showView('home')" style="text-align:center; cursor:pointer"><div style="font-size:20px">📊</div><div style="font-size:10px; font-weight:800">ÖZET</div></div>
-    <div onclick="showView('add')" style="text-align:center; cursor:pointer"><div style="font-size:20px">➕</div><div style="font-size:10px; font-weight:800">EKLE</div></div>
+  <div id="search-result-box" class="search-result-card">
+     <div style="font-size:9px; font-weight:900; opacity:0.6; color:#7c3aed; margin-bottom:4px">ARAMA SONUCU TOPLAMI</div>
+     <div id="search-total-val" style="font-size:18px; font-weight:900">0 ₺</div>
   </div>
+
+  <div id="person-detail-area" style="display:none">
+     <input type="text" id="search-input" placeholder="İşlemlerde ara..." style="width:100%; background:#161616; border:1px solid #333; padding:12px; border-radius:12px; color:#fff; margin-bottom:10px; outline:none;" oninput="renderHome()">
+     <div id="history-container"></div>
+  </div>
+
+  <div class="bottom-controls">
+    <div class="rate-info">
+      <div style="font-size:9px; font-weight:800; opacity:0.5">AUD KURU</div>
+      <input type="number" id="rate-input" step="0.0001" value="0.0318" class="aud-input">
+    </div>
+    <div class="json-actions">
+      <button class="btn-mini" onclick="exportJSON()">📥 YEDEKLE</button>
+      <button class="btn-mini" onclick="document.getElementById('import-file').click()">📤 YÜKLE</button>
+      <input type="file" id="import-file" style="display:none" onchange="importJSON(event)" accept=".json">
+    </div>
+  </div>
+</div>
+
+<div id="add-view" style="display:none">
+  <h2 style="margin-bottom:20px">İşlem Ekle</h2>
+  <select id="f-type" class="input-field"><option value="expense">Gider (-)</option><option value="income">Gelir (+)</option></select>
+  <select id="f-person" class="input-field"></select>
+  <input type="date" id="f-date" class="input-field">
+  <input type="number" id="f-amount" placeholder="Tutar (₺)" class="input-field">
+  <input type="text" id="f-note" placeholder="Açıklama" class="input-field">
+  <button class="btn-save" onclick="addTx()">KAYDET</button>
+  <button onclick="showView('home')" style="width:100%; background:none; border:none; color:#666; margin-top:20px; font-weight:700">İPTAL</button>
+</div>
+
+<div class="nav-bar">
+  <div onclick="showView('home')" style="text-align:center; cursor:pointer"><div style="font-size:20px">📊</div><div style="font-size:10px; font-weight:800">ÖZET</div></div>
+  <div onclick="showView('add')" style="text-align:center; cursor:pointer"><div style="font-size:20px">➕</div><div style="font-size:10px; font-weight:800">EKLE</div></div>
+</div>
 
 <script>
   let txs = JSON.parse(localStorage.getItem('txs_v2') || '[]');
@@ -109,8 +105,9 @@
     updateMonthDropdown();
     renderHome();
     
+    // DÜZELTİLDİ: Service Worker yolu "./sw.js" olarak değiştirildi (kök dizin)
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/cuzdanpro3/sw.js')
+      navigator.serviceWorker.register('./sw.js')
         .then(() => console.log("SW Kayıtlı"))
         .catch(err => console.log("SW Hatası", err));
     }
@@ -134,7 +131,7 @@
 
   function renderHome() {
     const selectedMonth = document.getElementById('month-filter').value;
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
     
     let filtered = txs;
     if (selectedMonth !== "Hepsi") {
@@ -245,11 +242,10 @@
       updateMonthDropdown();
       renderHome();
     };
-    reader.readAsText(e.target.files);
+    reader.readAsText(e.target.files[0]);
   }
 
   init();
 </script>
 </body>
-  </html>
-  
+</html>
