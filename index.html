@@ -47,9 +47,6 @@
 // --- SABİTLER ---
 const PEOPLE = ["Erdal", "A.A", "N.A"];
 
-const INCOME_CATS = ["Maaş", "Freelance", "Hediye", "Yatırım", "Diğer"];
-const EXPENSE_CATS = ["Alışveriş", "Fatura", "Ulaşım", "Eğlence", "Sağlık", "Kira", "Yemek", "Diğer"];
-
 const formatTRY = (n) => {
   return new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(n || 0);
 };
@@ -61,15 +58,15 @@ const formatDateShort = (d) => {
   return new Date(d).toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
 };
 
-// Örnek veri
+// Örnek veri (kategori yok, sadece not var)
 const SAMPLE_TXS = [
-  { id: 1, type: "income", person: "Erdal", amount: 15000, note: "Mart maaşı", category: "Maaş", date: "2026-03-01" },
-  { id: 2, type: "expense", person: "Erdal", amount: 3500, note: "Kira", category: "Kira", date: "2026-03-03" },
-  { id: 3, type: "expense", person: "A.A", amount: 850, note: "Market", category: "Alışveriş", date: "2026-03-05" },
-  { id: 4, type: "income", person: "A.A", amount: 2200, note: "Freelance", category: "Freelance", date: "2026-03-07" },
-  { id: 5, type: "expense", person: "N.A", amount: 320, note: "Ulaşım", category: "Ulaşım", date: "2026-03-08" },
-  { id: 6, type: "income", person: "N.A", amount: 5000, note: "Maaş", category: "Maaş", date: "2026-03-09" },
-  { id: 7, type: "expense", person: "Erdal", amount: 540, note: "Sinema", category: "Eğlence", date: "2026-03-12" },
+  { id: 1, type: "income", person: "Erdal", amount: 15000, note: "Mart maaşı", date: "2026-03-01" },
+  { id: 2, type: "expense", person: "Erdal", amount: 3500, note: "Kira", date: "2026-03-03" },
+  { id: 3, type: "expense", person: "A.A", amount: 850, note: "Market alışverişi", date: "2026-03-05" },
+  { id: 4, type: "income", person: "A.A", amount: 2200, note: "Freelance proje", date: "2026-03-07" },
+  { id: 5, type: "expense", person: "N.A", amount: 320, note: "Ulaşım", date: "2026-03-08" },
+  { id: 6, type: "income", person: "N.A", amount: 5000, note: "Maaş", date: "2026-03-09" },
+  { id: 7, type: "expense", person: "Erdal", amount: 540, note: "Sinema + yemek", date: "2026-03-12" },
 ];
 
 // Ana Bileşen
@@ -88,12 +85,12 @@ const App = () => {
   const [detailModal, setDetailModal] = React.useState(null);
   const [filterType, setFilterType] = React.useState("all");
   const [filterPerson, setFilterPerson] = React.useState("all");
-  const [filterCategory, setFilterCategory] = React.useState("all");
+  const [searchText, setSearchText] = React.useState(""); // NOT ÜZERİNDEN ARAMA
   const [monthViewKey, setMonthViewKey] = React.useState(null);
   const [personTxFilter, setPersonTxFilter] = React.useState("all");
   const [personSearch, setPersonSearch] = React.useState("");
 
-  const blankForm = { type: "expense", person: "Erdal", amount: "", note: "", category: "Diğer", date: new Date().toISOString().split("T")[0] };
+  const blankForm = { type: "expense", person: "Erdal", amount: "", note: "", date: new Date().toISOString().split("T")[0] };
   const [form, setForm] = React.useState(blankForm);
 
   // LocalStorage'a kaydet
@@ -139,13 +136,13 @@ const App = () => {
   });
   const monthKeys = Object.keys(monthMap).sort().reverse();
 
-  // Ana ekran filtresi
+  // Ana ekran filtresi (tip + kişi + not araması)
   const filteredHome = txs.filter(t => {
     if (filterType !== "all" && t.type !== filterType) return false;
     if (filterPerson !== "all" && t.person !== filterPerson) return false;
-    if (filterCategory !== "all" && t.category !== filterCategory) return false;
+    if (searchText.trim() !== "" && !(t.note || "").toLowerCase().includes(searchText.toLowerCase())) return false;
     return true;
-  }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
+  }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
 
   const openAdd = () => { setForm(blankForm); setEditTarget(null); setView("add"); };
   const openEdit = (tx) => { setForm({ ...tx, amount: String(tx.amount) }); setEditTarget(tx); setView("add"); setDetailModal(null); };
@@ -160,7 +157,7 @@ const App = () => {
     setView("home"); setEditTarget(null); setForm(blankForm);
   };
 
-  const goHome = () => { setView("home"); setSelectedPerson(null); setMonthViewKey(null); setFilterType("all"); setFilterPerson("all"); setFilterCategory("all"); setDetailModal(null); };
+  const goHome = () => { setView("home"); setSelectedPerson(null); setMonthViewKey(null); setFilterType("all"); setFilterPerson("all"); setSearchText(""); setDetailModal(null); };
 
   const openPersonDetail = (name) => { setSelectedPerson(name); setPersonTxFilter("all"); setPersonSearch(""); setView("person"); };
   const openMonthDetail = (key) => { setMonthViewKey(key); setView("month"); };
@@ -179,7 +176,6 @@ const App = () => {
           <div style={{ fontWeight: 700 }}>{tx.note || (tx.type === "income" ? "Gelir" : "Harcama")}</div>
           <div style={{ fontSize: 11, color: "#999", display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
             <span>{tx.person}</span>
-            <span className="aud-badge" style={{ background: "#1f1f26" }}>{tx.category || "Genel"}</span>
             <span>{formatDateShort(tx.date)}</span>
           </div>
         </div>
@@ -244,11 +240,29 @@ const App = () => {
             })}
           </div>
 
-          {/* Filtreler */}
+          {/* Filtreler + ARAMA */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            <select className="chip" value={filterType} onChange={e => setFilterType(e.target.value)}><option value="all">📌 Tümü</option><option value="income">💰 Gelir</option><option value="expense">💸 Gider</option></select>
-            <select className="chip" value={filterPerson} onChange={e => setFilterPerson(e.target.value)}><option value="all">👤 Tüm kişiler</option>{PEOPLE.map(p => <option key={p}>{p}</option>)}</select>
-            <select className="chip" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}><option value="all">🏷️ Tüm kategoriler</option>{[...INCOME_CATS, ...EXPENSE_CATS].map(c => <option key={c}>{c}</option>)}</select>
+            <select className="chip" value={filterType} onChange={e => setFilterType(e.target.value)}>
+              <option value="all">📌 Tümü</option>
+              <option value="income">💰 Gelir</option>
+              <option value="expense">💸 Gider</option>
+            </select>
+            <select className="chip" value={filterPerson} onChange={e => setFilterPerson(e.target.value)}>
+              <option value="all">👤 Tüm kişiler</option>
+              {PEOPLE.map(p => <option key={p}>{p}</option>)}
+            </select>
+          </div>
+          
+          {/* NOT ARAMA KUTUSU */}
+          <div style={{ marginBottom: 16 }}>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="🔍 Not içinde ara (maaş, kira, market...)" 
+              value={searchText} 
+              onChange={e => setSearchText(e.target.value)}
+              style={{ marginBottom: 0 }}
+            />
           </div>
 
           <div style={{ fontWeight: 700, margin: "6px 0 8px" }}>📋 Son İşlemler</div>
@@ -283,8 +297,12 @@ const App = () => {
             <div><div style={{ fontWeight: 800, fontSize: 22 }}>{selectedPerson}</div><div style={{ color: "#34d399" }}>Net {formatTRY(personStats.find(p => p.name === selectedPerson)?.balance || 0)}</div></div>
           </div>
           <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            <select className="chip" value={personTxFilter} onChange={e => setPersonTxFilter(e.target.value)}><option value="all">Tüm işlemler</option><option value="income">Gelirler</option><option value="expense">Giderler</option></select>
-            <input className="input-field" style={{ padding: "8px 14px", margin: 0 }} placeholder="🔍 not ara" value={personSearch} onChange={e => setPersonSearch(e.target.value)} />
+            <select className="chip" value={personTxFilter} onChange={e => setPersonTxFilter(e.target.value)}>
+              <option value="all">Tüm işlemler</option>
+              <option value="income">Gelirler</option>
+              <option value="expense">Giderler</option>
+            </select>
+            <input className="input-field" style={{ padding: "8px 14px", margin: 0 }} placeholder="🔍 Not ara" value={personSearch} onChange={e => setPersonSearch(e.target.value)} />
           </div>
           {personTxs.map(tx => <TransactionRow key={tx.id} tx={tx} onClick={t => setDetailModal(t)} />)}
           {personTxs.length === 0 && <div style={{ textAlign: "center", padding: 40, color: "#666" }}>Kayıt yok</div>}
@@ -297,77 +315,4 @@ const App = () => {
         <div className="slide-up" style={{ padding: "0 18px" }}>
           <button className="btn" onClick={goHome} style={{ background: "#25252e", padding: "8px 18px", borderRadius: 40, marginBottom: 16 }}>← Geri</button>
           <div className="glass-card" style={{ padding: 20, textAlign: "center", marginBottom: 20 }}>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>{currentMonthData.label}</div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 12 }}>
-              <div><div>💰 Gelir</div><div style={{ fontWeight: 800, color: "#34d399" }}>{formatTRY(currentMonthData.inc)}</div></div>
-              <div><div>💸 Gider</div><div style={{ fontWeight: 800, color: "#f87171" }}>{formatTRY(currentMonthData.exp)}</div></div>
-              <div><div>📌 Net</div><div style={{ fontWeight: 800 }}>{formatTRY(currentMonthData.inc - currentMonthData.exp)}</div></div>
-            </div>
-          </div>
-          <div style={{ fontWeight: 700, marginBottom: 12 }}>📅 Ayın işlemleri</div>
-          {currentMonthData.transactions.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(tx => <TransactionRow key={tx.id} tx={tx} onClick={t=>setDetailModal(t)} />)}
-        </div>
-      )}
-
-      {/* ADD/EDIT FORM */}
-      {view === "add" && (
-        <div className="slide-up" style={{ padding: "0 18px" }}>
-          <div className="glass-card" style={{ padding: 26 }}>
-            <h3 style={{ marginBottom: 16 }}>{editTarget ? "✏️ Düzenle" : "➕ Yeni İşlem"}</h3>
-            <select className="input-field" value={form.type} onChange={e => { const nt = e.target.value; setForm({ ...form, type: nt, category: nt === "income" ? "Maaş" : "Diğer" }); }}>
-              <option value="income">💰 Gelir</option><option value="expense">💸 Gider</option>
-            </select>
-            <select className="input-field" value={form.person} onChange={e => setForm({ ...form, person: e.target.value })}>
-              {PEOPLE.map(p => <option key={p}>{p}</option>)}
-            </select>
-            <input className="input-field" type="number" placeholder="₺ Tutar" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
-            <select className="input-field" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-              {(form.type === "income" ? INCOME_CATS : EXPENSE_CATS).map(c => <option key={c}>{c}</option>)}
-            </select>
-            <input className="input-field" placeholder="Not" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            <input className="input-field" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-            <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-              <button className="btn" onClick={submitTx} style={{ flex: 1, background: "#7c3aed", padding: 14, borderRadius: 60 }}>Kaydet</button>
-              <button className="btn" onClick={goHome} style={{ flex: 1, background: "#2a2a32", padding: 14, borderRadius: 60 }}>İptal</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DETAIL MODAL */}
-      {detailModal && (
-        <div className="modal-overlay" onClick={() => setDetailModal(null)}>
-          <div className="modal-card" onClick={e => e.stopPropagation()}>
-            <div style={{ fontWeight: 800, fontSize: 22 }}>{detailModal.type === "income" ? "Gelir Detayı" : "Gider Detayı"}</div>
-            <div style={{ fontSize: 32, fontFamily: "monospace", fontWeight: 800, margin: "10px 0", color: detailModal.type === "income" ? "#34d399" : "#f87171" }}>{formatTRY(detailModal.amount)}</div>
-            <div className="aud-badge" style={{ marginBottom: 14 }}>🇦🇺 {formatAUD(toAUD(detailModal.amount))}</div>
-            <div style={{ background: "#1c1c24", borderRadius: 24, padding: 16, marginBottom: 20 }}>
-              <div>👤 Kişi: {detailModal.person}</div>
-              <div>📅 Tarih: {new Date(detailModal.date).toLocaleDateString("tr-TR")}</div>
-              <div>🏷️ Kategori: {detailModal.category || "—"}</div>
-              <div>📝 Not: {detailModal.note || "—"}</div>
-            </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button className="btn" style={{ flex: 1, background: "#2c5f5f", padding: 12, borderRadius: 40 }} onClick={() => { openEdit(detailModal); setDetailModal(null); }}>✏️ Düzenle</button>
-              <button className="btn" style={{ flex: 1, background: "#6b2e2e", padding: 12, borderRadius: 40 }} onClick={() => { if (confirm("Silinsin mi?")) deleteTx(detailModal.id); }}>🗑️ Sil</button>
-              <button className="btn" style={{ background: "#2c2c36", padding: "12px 18px", borderRadius: 40 }} onClick={() => setDetailModal(null)}>Kapat</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Nav + FAB */}
-      <div className="bottom-nav">
-        <button className={`nav-btn ${view === "home" ? "nav-active" : ""}`} onClick={() => goHome()}><span style={{ fontSize: 22 }}>🏠</span><span>Ana Sayfa</span></button>
-        <button className="nav-btn" onClick={() => { setView("add"); setEditTarget(null); setForm(blankForm); }}><span style={{ fontSize: 22 }}>➕</span><span>Ekle</span></button>
-        <button className="nav-btn" onClick={() => { const data = localStorage.getItem("wallet_data"); if(data){ const blob = new Blob([data], {type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `cuzdan_${Date.now()}.json`; a.click(); URL.revokeObjectURL(blob); } }}><span style={{ fontSize: 22 }}>💾</span><span>Yedek</span></button>
-      </div>
-      {view !== "add" && <button className="floating-btn" onClick={openAdd}>+</button>}
-    </div>
-  );
-};
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-</script>
-</body>
-</html>
+            <div style={{ fontS
