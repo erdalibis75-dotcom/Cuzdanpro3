@@ -1,4 +1,4 @@
-<!DOTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
@@ -27,7 +27,6 @@
     padding-bottom: 80px;
   }
 
-  /* Kartlar */
   .card {
     background: #121216;
     border: 1px solid #1f1f24;
@@ -48,7 +47,6 @@
     opacity: 0.8;
   }
 
-  /* İşlem satırı */
   .tx-row {
     display: flex;
     align-items: center;
@@ -65,7 +63,6 @@
     background: #1a1a20;
   }
 
-  /* Form elemanları */
   .input-field {
     width: 100%;
     background: #18181c;
@@ -88,7 +85,6 @@
     cursor: pointer;
   }
 
-  /* Chip butonları */
   .chip {
     display: inline-flex;
     align-items: center;
@@ -103,7 +99,6 @@
     font-family: inherit;
   }
 
-  /* Progress bar */
   .progress-bar {
     height: 6px;
     background: #2a2a30;
@@ -119,7 +114,6 @@
     background: #34d399;
   }
 
-  /* AUD badge */
   .aud-badge {
     display: inline-flex;
     align-items: center;
@@ -134,7 +128,6 @@
     font-weight: 700;
   }
 
-  /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -154,7 +147,6 @@
     overflow-y: auto;
   }
 
-  /* Alt navigasyon */
   .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -188,7 +180,6 @@
     color: #c084fc;
   }
 
-  /* Floating button */
   .floating-btn {
     position: fixed;
     bottom: 80px;
@@ -245,44 +236,16 @@
     align-items: center;
   }
 
-  .gap-2 {
-    gap: 8px;
-  }
-
   .mt-2 {
     margin-top: 8px;
-  }
-
-  .mt-3 {
-    margin-top: 12px;
-  }
-
-  .mb-2 {
-    margin-bottom: 8px;
-  }
-
-  .mb-3 {
-    margin-bottom: 12px;
   }
 
   .text-center {
     text-align: center;
   }
 
-  .text-green {
-    color: #34d399;
-  }
-
-  .text-red {
-    color: #f87171;
-  }
-
-  .text-purple {
-    color: #c4b5fd;
-  }
-
-  .text-muted {
-    color: #aaa;
+  .hidden {
+    display: none;
   }
 </style>
 </head>
@@ -290,8 +253,7 @@
 <div id="root"></div>
 
 <script>
-// ---------- REACT ve REACT DOM (CDN) ----------
-// Önce React ve ReactDOM'u yükle
+// ---------- REACT ve REACT DOM ----------
 (function() {
   const script1 = document.createElement('script');
   script1.src = 'https://unpkg.com/react@18.2.0/umd/react.development.js';
@@ -299,7 +261,6 @@
     const script2 = document.createElement('script');
     script2.src = 'https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js';
     script2.onload = function() {
-      // React ve ReactDOM hazır, şimdi uygulamayı çalıştır
       initApp();
     };
     document.head.appendChild(script2);
@@ -308,9 +269,8 @@
 })();
 
 function initApp() {
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
 
-  // ---------- SABİTLER ----------
   const PEOPLE = ["Erdal", "A.A", "N.A"];
 
   const formatTRY = (n) => {
@@ -326,7 +286,6 @@ function initApp() {
     return new Date(d).toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
   };
 
-  // Örnek veri
   const SAMPLE_TXS = [
     { id: 1, type: "income", person: "Erdal", amount: 15000, note: "Mart maaşı", date: "2026-03-01" },
     { id: 2, type: "expense", person: "Erdal", amount: 3500, note: "Kira", date: "2026-03-03" },
@@ -337,12 +296,15 @@ function initApp() {
     { id: 7, type: "expense", person: "Erdal", amount: 540, note: "Sinema + yemek", date: "2026-03-12" },
   ];
 
-  // ---------- ANA BİLEŞEN ----------
   const App = () => {
     const [txs, setTxs] = useState(() => {
       try {
         const saved = localStorage.getItem("wallet_data");
-        return saved ? JSON.parse(saved) : SAMPLE_TXS;
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+        return SAMPLE_TXS;
       } catch (e) {
         return SAMPLE_TXS;
       }
@@ -359,16 +321,16 @@ function initApp() {
     const [monthViewKey, setMonthViewKey] = useState(null);
     const [personTxFilter, setPersonTxFilter] = useState("all");
     const [personSearch, setPersonSearch] = useState("");
+    const [toastMessage, setToastMessage] = useState(null);
+    const fileInputRef = useRef(null);
 
     const blankForm = { type: "expense", person: "Erdal", amount: "", note: "", date: new Date().toISOString().split("T")[0] };
     const [form, setForm] = useState(blankForm);
 
-    // LocalStorage'a kaydet
     useEffect(() => {
       localStorage.setItem("wallet_data", JSON.stringify(txs));
     }, [txs]);
 
-    // Döviz kuru çek
     useEffect(() => {
       const fetchRate = async () => {
         try {
@@ -384,9 +346,13 @@ function initApp() {
       fetchRate();
     }, []);
 
+    const showToast = (message, isError = false) => {
+      setToastMessage({ text: message, isError });
+      setTimeout(() => setToastMessage(null), 3000);
+    };
+
     const toAUD = (n) => (n || 0) * rate;
 
-    // Hesaplamalar
     const totalIncome = txs.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const totalExpense = txs.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
     const balance = totalIncome - totalExpense;
@@ -397,7 +363,6 @@ function initApp() {
       return { name: p, income: inc, expense: exp, balance: inc - exp };
     });
 
-    // Aylık gruplama
     const monthMap = {};
     txs.forEach(t => {
       if (!t.date) return;
@@ -411,13 +376,58 @@ function initApp() {
     });
     const monthKeys = Object.keys(monthMap).sort().reverse();
 
-    // Ana ekran filtresi
     const filteredHome = txs.filter(t => {
       if (filterType !== "all" && t.type !== filterType) return false;
       if (filterPerson !== "all" && t.person !== filterPerson) return false;
       if (searchText.trim() !== "" && !(t.note || "").toLowerCase().includes(searchText.toLowerCase())) return false;
       return true;
     }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20);
+
+    // VERİ DIŞA AKTAR (Yedekleme)
+    const exportData = () => {
+      try {
+        const dataStr = JSON.stringify(txs, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cuzdan_yedek_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("✅ Yedek başarıyla alındı!", false);
+      } catch (e) {
+        showToast("❌ Yedek alınırken hata oluştu!", true);
+      }
+    };
+
+    // VERİ İÇE AKTAR (Yedek Yükleme)
+    const importData = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (Array.isArray(importedData)) {
+            setTxs(importedData);
+            showToast(`✅ ${importedData.length} kayıt başarıyla yüklendi!`, false);
+            setView("home");
+          } else {
+            showToast("❌ Geçersiz dosya formatı!", true);
+          }
+        } catch (err) {
+          showToast("❌ Dosya okunamadı veya bozuk!", true);
+        }
+      };
+      reader.onerror = () => {
+        showToast("❌ Dosya okuma hatası!", true);
+      };
+      reader.readAsText(file);
+      
+      // input'u temizle ki aynı dosya tekrar seçilebilsin
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
     const openAdd = () => {
       setForm(blankForm);
@@ -433,19 +443,30 @@ function initApp() {
     };
 
     const deleteTx = (id) => {
-      setTxs(prev => prev.filter(t => t.id !== id));
-      setDetailModal(null);
+      if (confirm("Bu işlemi silmek istediğinize emin misiniz?")) {
+        setTxs(prev => prev.filter(t => t.id !== id));
+        setDetailModal(null);
+        showToast("🗑️ İşlem silindi", false);
+      }
     };
 
     const submitTx = () => {
-      if (!form.amount || !form.person) return;
+      if (!form.amount || !form.person) {
+        showToast("Lütfen tutar ve kişi seçin!", true);
+        return;
+      }
       const amountNum = parseFloat(form.amount);
-      if (isNaN(amountNum)) return;
+      if (isNaN(amountNum) || amountNum <= 0) {
+        showToast("Geçerli bir tutar girin!", true);
+        return;
+      }
       const newTx = { ...form, amount: amountNum, id: editTarget ? editTarget.id : Date.now() };
       if (editTarget) {
         setTxs(prev => prev.map(t => t.id === editTarget.id ? newTx : t));
+        showToast("✏️ İşlem düzenlendi", false);
       } else {
         setTxs(prev => [...prev, newTx]);
+        showToast("➕ Yeni işlem eklendi", false);
       }
       setView("home");
       setEditTarget(null);
@@ -477,7 +498,6 @@ function initApp() {
     const currentMonthData = monthViewKey ? monthMap[monthViewKey] : null;
     const personTxs = selectedPerson ? txs.filter(t => t.person === selectedPerson && (personTxFilter === "all" || t.type === personTxFilter)).filter(t => personSearch === "" || (t.note || "").toLowerCase().includes(personSearch.toLowerCase())).sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
 
-    // İşlem satırı bileşeni
     const TransactionRow = ({ tx, onClick }) => {
       return React.createElement("div", { className: "tx-row", onClick: () => onClick(tx) },
         React.createElement("div", { style: { display: "flex", gap: 12, alignItems: "center", flex: 1 } },
@@ -501,10 +521,31 @@ function initApp() {
       );
     };
 
-    // Ana ekran
+    const Toast = () => {
+      if (!toastMessage) return null;
+      return React.createElement("div", {
+        style: {
+          position: "fixed",
+          bottom: 100,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: toastMessage.isError ? "#dc2626" : "#059669",
+          color: "white",
+          padding: "10px 20px",
+          borderRadius: 40,
+          fontSize: 14,
+          fontWeight: 600,
+          zIndex: 300,
+          whiteSpace: "nowrap",
+          maxWidth: "90%",
+          textAlign: "center",
+          whiteSpace: "normal"
+        }
+      }, toastMessage.text);
+    };
+
     const HomeView = () => {
       return React.createElement("div", { className: "slide-up", style: { padding: "0 18px" } },
-        // Balance kartı
         React.createElement("div", { className: "card", style: { marginBottom: 24, background: "linear-gradient(135deg, #17132a, #0f0f17)" } },
           React.createElement("div", { style: { fontSize: 11, fontWeight: 600, color: "#c4b5fd" } }, "TOPLAM BAKİYE"),
           React.createElement("div", { style: { fontSize: 36, fontWeight: 800, fontFamily: "monospace", color: balance >= 0 ? "#c4b5fd" : "#ff9f8f" } }, formatTRY(balance)),
@@ -522,8 +563,6 @@ function initApp() {
             )
           )
         ),
-
-        // Kişi kartları
         React.createElement("div", { style: { marginBottom: 20 } },
           React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginBottom: 12 } }, "👥 Kişi Bazında"),
           personStats.map(p => {
@@ -545,8 +584,6 @@ function initApp() {
             );
           })
         ),
-
-        // Filtreler
         React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 } },
           React.createElement("select", { className: "chip", value: filterType, onChange: e => setFilterType(e.target.value) },
             React.createElement("option", { value: "all" }, "📌 Tümü"),
@@ -558,8 +595,6 @@ function initApp() {
             PEOPLE.map(p => React.createElement("option", { key: p, value: p }, p))
           )
         ),
-
-        // Not arama
         React.createElement("input", {
           type: "text",
           className: "input-field",
@@ -568,12 +603,9 @@ function initApp() {
           onChange: e => setSearchText(e.target.value),
           style: { marginBottom: 16 }
         }),
-
         React.createElement("div", { style: { fontWeight: 700, margin: "6px 0 8px" } }, "📋 Son İşlemler"),
         filteredHome.map(tx => React.createElement(TransactionRow, { key: tx.id, tx: tx, onClick: t => setDetailModal(t) })),
         filteredHome.length === 0 && React.createElement("div", { style: { textAlign: "center", padding: 40, color: "#555" } }, "İşlem yok. + ile ekleyin"),
-
-        // Aylar
         React.createElement("div", { style: { marginTop: 24, marginBottom: 30 } },
           React.createElement("div", { style: { fontSize: 14, fontWeight: 700, marginBottom: 12 } }, "📆 Aylık Özetler"),
           React.createElement("div", { style: { display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8 } },
@@ -594,7 +626,6 @@ function initApp() {
       );
     };
 
-    // Kişi detay görünümü
     const PersonView = () => {
       if (!selectedPerson) return null;
       const pStat = personStats.find(p => p.name === selectedPerson);
@@ -631,7 +662,6 @@ function initApp() {
       );
     };
 
-    // Ay görünümü
     const MonthView = () => {
       if (!monthViewKey || !currentMonthData) return null;
       return React.createElement("div", { className: "slide-up", style: { padding: "0 18px" } },
@@ -658,7 +688,6 @@ function initApp() {
       );
     };
 
-    // Form görünümü
     const AddView = () => {
       return React.createElement("div", { className: "slide-up", style: { padding: "0 18px" } },
         React.createElement("div", { className: "card", style: { padding: 26 } },
@@ -681,7 +710,6 @@ function initApp() {
       );
     };
 
-    // Detay modal
     const DetailModal = () => {
       if (!detailModal) return null;
       return React.createElement("div", { className: "modal-overlay", onClick: () => setDetailModal(null) },
@@ -696,14 +724,13 @@ function initApp() {
           ),
           React.createElement("div", { style: { display: "flex", gap: 12 } },
             React.createElement("button", { className: "btn", style: { flex: 1, background: "#2c5f5f", padding: 12, borderRadius: 40 }, onClick: () => { openEdit(detailModal); setDetailModal(null); } }, "✏️ Düzenle"),
-            React.createElement("button", { className: "btn", style: { flex: 1, background: "#6b2e2e", padding: 12, borderRadius: 40 }, onClick: () => { if (confirm("Silinsin mi?")) deleteTx(detailModal.id); } }, "🗑️ Sil"),
+            React.createElement("button", { className: "btn", style: { flex: 1, background: "#6b2e2e", padding: 12, borderRadius: 40 }, onClick: () => deleteTx(detailModal.id) }, "🗑️ Sil"),
             React.createElement("button", { className: "btn", style: { background: "#2c2c36", padding: "12px 18px", borderRadius: 40 }, onClick: () => setDetailModal(null) }, "Kapat")
           )
         )
       );
     };
 
-    // Header
     const Header = () => {
       if (view === "add") return null;
       return React.createElement("div", { style: { padding: "20px 18px 10px" } },
@@ -723,7 +750,6 @@ function initApp() {
       );
     };
 
-    // Bottom Nav
     const BottomNav = () => {
       return React.createElement("div", { className: "bottom-nav" },
         React.createElement("button", { className: `nav-btn ${view === "home" ? "nav-active" : ""}`, onClick: () => goHome() },
@@ -734,14 +760,24 @@ function initApp() {
           React.createElement("span", { style: { fontSize: 22 } }, "➕"),
           React.createElement("span", null, "Ekle")
         ),
-        React.createElement("button", { className: "nav-btn", onClick: () => { const data = localStorage.getItem("wallet_data"); if (data) { const blob = new Blob([data], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `cuzdan_${Date.now()}.json`; a.click(); URL.revokeObjectURL(blob); } } },
+        React.createElement("button", { className: "nav-btn", onClick: exportData },
           React.createElement("span", { style: { fontSize: 22 } }, "💾"),
-          React.createElement("span", null, "Yedek")
+          React.createElement("span", null, "Yedek Al")
+        ),
+        React.createElement("label", { className: "nav-btn", style: { cursor: "pointer" } },
+          React.createElement("span", { style: { fontSize: 22 } }, "📂"),
+          React.createElement("span", null, "Yedek Yükle"),
+          React.createElement("input", {
+            type: "file",
+            accept: ".json",
+            ref: fileInputRef,
+            onChange: importData,
+            style: { display: "none" }
+          })
         )
       );
     };
 
-    // Ana render
     return React.createElement("div", null,
       React.createElement(Header, null),
       view === "home" && React.createElement(HomeView, null),
@@ -750,14 +786,15 @@ function initApp() {
       view === "add" && React.createElement(AddView, null),
       React.createElement(DetailModal, null),
       React.createElement(BottomNav, null),
-      view !== "add" && React.createElement("button", { className: "floating-btn", onClick: openAdd }, "+")
+      view !== "add" && React.createElement("button", { className: "floating-btn", onClick: openAdd }, "+"),
+      React.createElement(Toast, null)
     );
   };
 
-  // Uygulamayı render et
   const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(React.createElement(App, null));
 }
 </script>
 </body>
 </html>
+
