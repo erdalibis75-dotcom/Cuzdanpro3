@@ -1,89 +1,187 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cüzdan Asistanı</title>
-    <script src="https://unpkg.com"></script>
-    <script src="https://unpkg.com"></script>
-    <script src="https://unpkg.com"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: #0a0a0c; color: #ededee; }
-        #root { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
-        .card { background: #121216; border: 1px solid #1f1f24; border-radius: 20px; padding: 15px; margin: 10px; }
-        .tx-row { display: flex; justify-content: space-between; padding: 12px; border-radius: 15px; background: #121216; margin: 8px 10px; border: 1px solid #1f1f24; }
-        .input-field { width: 100%; background: #18181c; border-radius: 12px; padding: 12px; color: #fff; border: 1px solid #2a2a30; margin-bottom: 10px; }
-        .btn { background: #7c3aed; color: white; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0c0c10; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #222; }
-        .nav-btn { color: #8e8e98; background: none; border: none; font-size: 12px; }
-        .floating-btn { position: fixed; bottom: 80px; right: 20px; width: 50px; height: 50px; border-radius: 25px; background: #7c3aed; color: white; border: none; font-size: 24px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cüzdan Asistanı | Gelir & Gider Takip</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: #0a0a0c; color: #ededee; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow-x: hidden; }
+  #root { max-width: 500px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
+  .card { background: #121216; border: 1px solid #1f1f24; border-radius: 24px; padding: 18px; }
+  .btn { cursor: pointer; transition: all 0.1s ease; font-weight: 600; border: none; background: none; }
+  .btn:active { transform: scale(0.96); opacity: 0.8; }
+  .tx-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 20px; background: #121216; margin-bottom: 8px; cursor: pointer; border: 1px solid #1f1f24; }
+  .input-field { width: 100%; background: #18181c; border-radius: 20px; padding: 14px 16px; color: #f0ede8; font-size: 15px; margin-bottom: 12px; border: 1px solid #2a2a30; font-family: inherit; }
+  .chip { display: inline-flex; align-items: center; padding: 10px 14px; border-radius: 40px; font-size: 13px; font-weight: 600; background: #1e1e24; cursor: pointer; border: none; color: #ddd; flex: 1; justify-content: center; }
+  .aud-badge { display: inline-flex; align-items: center; gap: 4px; background: #0f1a22; border: 1px solid #1e4a6e; border-radius: 8px; padding: 3px 8px; font-size: 10px; font-family: monospace; color: #5bc4f5; font-weight: 700; margin-top: 5px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: flex-end; }
+  .modal-card { background: #121216; border-radius: 32px 32px 0 0; width: 100%; padding: 28px 22px 38px; max-height: 80vh; overflow-y: auto; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 500px; margin: 0 auto; background: rgba(12, 12, 16, 0.95); backdrop-filter: blur(12px); border-top: 1px solid #22222a; display: flex; justify-content: space-around; padding: 10px 10px 25px; z-index: 40; }
+  .nav-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #8e8e98; font-weight: 600; cursor: pointer; }
+  .nav-active { color: #c084fc; }
+  .floating-btn { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; border-radius: 28px; background: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; z-index: 30; border: none; color: white; box-shadow: 0 8px 16px rgba(124, 58, 237, 0.3); }
+  .avatar { width: 44px; height: 44px; border-radius: 22px; background: #2a2a32; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .slide-up { animation: slideUp 0.3s ease-out; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
 </head>
 <body>
-    <div id="root"></div>
+<div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const PEOPLE = ["Erdal", "A.A", "N.A"];
+<script>
+(function() {
+  const script1 = document.createElement('script');
+  script1.src = 'https://unpkg.com';
+  script1.onload = function() {
+    const script2 = document.createElement('script');
+    script2.src = 'https://unpkg.com';
+    script2.onload = initApp;
+    document.head.appendChild(script2);
+  };
+  document.head.appendChild(script1);
+})();
 
-        function App() {
-            const [view, setView] = useState('home');
-            const [txs, setTxs] = useState(() => JSON.parse(localStorage.getItem("wallet_v3")) || []);
-            const [form, setForm] = useState({ type: 'expense', person: 'Erdal', amount: '', note: '', date: new Date().toISOString().split('T')[0] });
+function initApp() {
+  const { useState, useEffect } = React;
+  const PEOPLE = ["Erdal", "A.A", "N.A"];
 
-            useEffect(() => { localStorage.setItem("wallet_v3", JSON.stringify(txs)); }, [txs]);
+  const formatTRY = (n) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(n || 0);
+  const formatAUD = (n) => new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", minimumFractionDigits: 2 }).format(n || 0);
 
-            const handleSave = () => {
-                if(!form.amount || !form.note) return alert("Doldur lütfen!");
-                setTxs([{...form, id: Date.now(), amount: parseFloat(form.amount)}, ...txs]);
-                setForm({ ...form, amount: '', note: '' });
-                setView('home');
-            };
+  const App = () => {
+    const [txs, setTxs] = useState(() => JSON.parse(localStorage.getItem("wallet_data")) || []);
+    const [view, setView] = useState("home");
+    const [rate, setRate] = useState(0.045);
+    const [detailModal, setDetailModal] = useState(null);
+    const [editTarget, setEditTarget] = useState(null);
+    const [searchText, setSearchText] = useState("");
+    const [filterPerson, setFilterPerson] = useState("all");
+    const [filterType, setFilterType] = useState("all");
 
-            const totals = txs.reduce((a, c) => { a[c.type] += c.amount; return a; }, { income: 0, expense: 0 });
+    const blankForm = { type: "expense", person: "Erdal", amount: "", note: "", date: new Date().toISOString().split("T")[0] };
+    const [form, setForm] = useState(blankForm);
 
-            return (
-                <div>
-                    {view === 'home' ? (
-                        <div>
-                            <div className="card">
-                                <p style={{color: '#8e8e98'}}>Toplam Bakiye</p>
-                                <h1 style={{fontSize: '32px'}}>{totals.income - totals.expense} ₺</h1>
-                            </div>
-                            <h3 style={{margin: '15px'}}>Son İşlemler</h3>
-                            {txs.map(t => (
-                                <div className="tx-row" key={t.id}>
-                                    <span>{t.note}<br/><small style={{color: '#8e8e98'}}>{t.person}</small></span>
-                                    <b style={{color: t.type === 'income' ? '#34d399' : '#f87171'}}>{t.type === 'income' ? '+' : '-'}{t.amount} ₺</b>
-                                </div>
-                            ))}
-                            <button className="floating-btn" onClick={() => setView('add')}>+</button>
-                        </div>
-                    ) : (
-                        <div style={{padding: '20px'}}>
-                            <h2>Yeni İşlem</h2>
-                            <div style={{display:'flex', gap:10, margin:'15px 0'}}>
-                                <button className="btn" style={{background: form.type === 'income' ? '#34d399':'#222'}} onClick={()=>setForm({...form, type:'income'})}>Gelir</button>
-                                <button className="btn" style={{background: form.type === 'expense' ? '#f87171':'#222'}} onClick={()=>setForm({...form, type:'expense'})}>Gider</button>
-                            </div>
-                            <select className="input-field" value={form.person} onChange={e=>setForm({...form, person:e.target.value})}>{PEOPLE.map(p=><option key={p}>{p}</option>)}</select>
-                            <input type="number" placeholder="Tutar" className="input-field" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})}/>
-                            <input type="text" placeholder="Açıklama" className="input-field" value={form.note} onChange={e=>setForm({...form, note:e.target.value})}/>
-                            <button className="btn" onClick={handleSave}>Kaydet</button>
-                            <button className="btn" style={{background:'none', color:'#888'}} onClick={()=>setView('home')}>Vazgeç</button>
-                        </div>
-                    )}
-                    <nav className="bottom-nav">
-                        <button className="nav-btn" onClick={()=>setView('home')}>🏠 Ana Sayfa</button>
-                        <button className="nav-btn" onClick={()=>alert("Geçmiş yakında!")}>📊 Geçmiş</button>
-                    </nav>
-                </div>
-            );
-        }
+    useEffect(() => {
+      localStorage.setItem("wallet_data", JSON.stringify(txs));
+    }, [txs]);
 
-        const root = ReactDOM.createRoot(document.getElementById("root"));
-        root.render(<App />);
-    </script>
+    useEffect(() => {
+      fetch("https://frankfurter.app")
+        .then(res => res.json()).then(data => data.rates.AUD && setRate(data.rates.AUD))
+        .catch(() => console.warn("Kur çekilemedi."));
+    }, []);
+
+    const handleSave = () => {
+      if (!form.amount || !form.note) return alert("Alanları doldurun!");
+      const newTx = { ...form, amount: parseFloat(form.amount), id: editTarget || Date.now() };
+      setTxs(prev => editTarget ? prev.map(t => t.id === editTarget ? newTx : t) : [newTx, ...prev]);
+      setView("home"); setForm(blankForm); setEditTarget(null);
+    };
+
+    const deleteTx = (id) => {
+      if(confirm("Silinsin mi?")) {
+        setTxs(prev => prev.filter(t => t.id !== id));
+        setDetailModal(null);
+      }
+    };
+
+    const totals = txs.reduce((a, c) => { a[c.type] += c.amount; return a; }, { income: 0, expense: 0 });
+    const filteredTxs = txs.filter(t => 
+      (filterPerson === "all" || t.person === filterPerson) && 
+      (filterType === "all" || t.type === filterType) && 
+      t.note.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    return (
+      <div id="root">
+        {view === "home" && (
+          <div className="slide-up" style={{padding:20}}>
+            <div className="flex-between" style={{marginBottom:24}}>
+              <div>
+                <p style={{color:'#8e8e98', fontSize:14}}>Net Bakiye</p>
+                <h1 style={{fontSize:32}}>{formatTRY(totals.income - totals.expense)}</h1>
+                <div className="aud-badge">≈ {formatAUD((totals.income - totals.expense) * rate)}</div>
+              </div>
+              <div className="avatar">👤</div>
+            </div>
+
+            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:24}}>
+              <div className="card" style={{borderColor:'#10b98133'}}><p style={{color:'#10b981', fontSize:12, marginBottom:4}}>Gelir</p><b>{formatTRY(totals.income)}</b></div>
+              <div className="card" style={{borderColor:'#ef444433'}}><p style={{color:'#ef4444', fontSize:12, marginBottom:4}}>Gider</p><b>{formatTRY(totals.expense)}</b></div>
+            </div>
+
+            <h3 style={{marginBottom:15}}>Son İşlemler</h3>
+            {txs.slice(0, 10).map(t => (
+              <div key={t.id} className="tx-row" onClick={() => setDetailModal(t)}>
+                <span>{t.note}<br/><small style={{color:'#8e8e98'}}>{t.person}</small></span>
+                <b style={{color: t.type === 'income' ? '#34d399' : '#f87171'}}>{t.type === 'income' ? '+' : '-'}{t.amount}₺</b>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {view === "history" && (
+          <div className="slide-up" style={{padding:20}}>
+            <h2 style={{marginBottom:15}}>Geçmiş</h2>
+            <input type="text" placeholder="Açıklama ara..." className="input-field" onChange={e => setSearchText(e.target.value)} />
+            <div style={{display:'flex', gap:8, marginBottom:15}}>
+              <select className="input-field" onChange={e => setFilterPerson(e.target.value)} style={{flex:1}}><option value="all">Tüm Kişiler</option>{PEOPLE.map(p => <option key={p} value={p}>{p}</option>)}</select>
+              <select className="input-field" onChange={e => setFilterType(e.target.value)} style={{flex:1}}><option value="all">Tür</option><option value="income">Gelir</option><option value="expense">Gider</option></select>
+            </div>
+            {filteredTxs.map(t => (
+              <div key={t.id} className="tx-row" onClick={() => setDetailModal(t)}>
+                <span>{t.note}<br/><small style={{color:'#8e8e98'}}>{t.person} • {t.date}</small></span>
+                <b style={{color: t.type === 'income' ? '#34d399' : '#f87171'}}>{t.amount}₺</b>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {view === "add" && (
+          <div className="slide-up" style={{padding:24}}>
+            <h2 style={{marginBottom:15}}>{editTarget ? 'Düzenle' : 'Yeni İşlem'}</h2>
+            <div style={{display:'flex', gap:10, marginBottom:20}}>
+              <button className="chip" style={{background: form.type === 'expense' ? '#f87171' : '#1e1e24'}} onClick={() => setForm({...form, type:'expense'})}>Gider</button>
+              <button className="chip" style={{background: form.type === 'income' ? '#34d399' : '#1e1e24'}} onClick={() => setForm({...form, type:'income'})}>Gelir</button>
+            </div>
+            <select className="input-field" value={form.person} onChange={e => setForm({...form, person: e.target.value})}>{PEOPLE.map(p => <option key={p} value={p}>{p}</option>)}</select>
+            <input type="number" placeholder="Tutar" className="input-field" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} />
+            <input type="text" placeholder="Açıklama" className="input-field" value={form.note} onChange={e => setForm({...form, note: e.target.value})} />
+            <input type="date" className="input-field" value={form.date} onChange={e => setForm({...form, date: e.target.value})} />
+            <button className="btn" style={{width:'100%', background:'#7c3aed', padding:16, borderRadius:20, color:'white', fontSize:16}} onClick={handleSave}>Kaydet</button>
+            <button className="btn" style={{width:'100%', marginTop:15, color:'#8e8e98'}} onClick={() => { setView("home"); setEditTarget(null); }}>Vazgeç</button>
+          </div>
+        )}
+
+        {detailModal && (
+          <div className="modal-overlay" onClick={() => setDetailModal(null)}>
+            <div className="modal-card slide-up" onClick={e => e.stopPropagation()}>
+              <h3 style={{marginBottom:15}}>{detailModal.note}</h3>
+              <p style={{color:'#8e8e98', marginBottom:5}}>Kişi: <span style={{color:'#fff'}}>{detailModal.person}</span></p>
+              <p style={{color:'#8e8e98', marginBottom:5}}>Tarih: <span style={{color:'#fff'}}>{detailModal.date}</span></p>
+              <p style={{color:'#8e8e98', marginBottom:5}}>Tutar: <span style={{color: detailModal.type === 'income' ? '#34d399' : '#f87171'}}>{formatTRY(detailModal.amount)}</span></p>
+              <div style={{display:'flex', gap:10, marginTop:25}}>
+                <button className="btn" style={{flex:1, background:'#1e1e24', padding:12, borderRadius:12}} onClick={() => { setEditTarget(detailModal.id); setForm(detailModal); setView("add"); setDetailModal(null); }}>Düzenle</button>
+                <button className="btn" style={{flex:1, background:'#ef444422', color:'#ef4444', padding:12, borderRadius:12}} onClick={() => deleteTx(detailModal.id)}>Sil</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === "home" && <button className="floating-btn" onClick={() => setView("add")}>+</button>}
+
+        <nav className="bottom-nav">
+          <button className={`nav-btn ${view === 'home' ? 'nav-active' : ''}`} onClick={() => setView("home")}>🏠<span>Ana Sayfa</span></button>
+          <button className={`nav-btn ${view === 'history' ? 'nav-active' : ''}`} onClick={() => setView("history")}>📊<span>Geçmiş</span></button>
+        </nav>
+      </div>
+    );
+  };
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+}
+</script>
 </body>
 </html>
