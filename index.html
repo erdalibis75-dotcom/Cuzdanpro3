@@ -36,8 +36,8 @@
   .hidden{display:none}
   .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#059669;color:white;padding:10px 20px;border-radius:40px;font-size:14px;font-weight:600;z-index:300;max-width:90%;text-align:center}
   .toast-error{background:#dc2626}
-   </style>
-   </head>
+                </style>
+                </head>
 <body>
 <div id="root"></div>
 <script>
@@ -50,7 +50,8 @@ const formatAUD=e=>new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD
 const formatDateShort=e=>e?new Date(e).toLocaleDateString("tr-TR",{day:"numeric",month:"short"}):"";
 const SAMPLE_TXS=[{id:1,type:"income",person:"Erdal",amount:15000,note:"Mart maaşı",date:"2026-03-01"},{id:2,type:"expense",person:"Erdal",amount:3500,note:"Kira",date:"2026-03-03"},{id:3,type:"expense",person:"A.A",amount:850,note:"Market alışverişi",date:"2026-03-05"},{id:4,type:"income",person:"A.A",amount:2200,note:"Freelance proje",date:"2026-03-07"},{id:5,type:"expense",person:"N.A",amount:320,note:"Ulaşım",date:"2026-03-08"},{id:6,type:"income",person:"N.A",amount:5000,note:"Maaş",date:"2026-03-09"},{id:7,type:"expense",person:"Erdal",amount:540,note:"Sinema + yemek",date:"2026-03-12"}];
 const App=()=>{
-const[e,t]=useState(()=>{try{const e=localStorage.getItem("wallet_data");if(e){const t=JSON.parse(e);if(Array.isArray(t)&&t.length>0)return t}}catch(e){}return SAMPLE_TXS}) const[r,n]=useState(0.032),[i,o]=useState(true),[a,s]=useState("home"),[l,c]=useState(null),[u,d]=useState(null),[p,m]=useState(null),[h,f]=useState("all"),[y,g]=useState("all"),[v,b]=useState(""),[S,k]=useState(null),[w,E]=useState("all"),[x,P]=useState(""),[C,I]=useState(null),R=useRef(null);
+const[e,t]=useState(()=>{try{const e=localStorage.getItem("wallet_data");if(e){const t=JSON.parse(e);if(Array.isArray(t)&&t.length>0)return t}}catch(e){}return SAMPLE_TXS});
+const[r,n]=useState(0.032),[i,o]=useState(true),[a,s]=useState("home"),[l,c]=useState(null),[u,d]=useState(null),[p,m]=useState(null),[h,f]=useState("all"),[y,g]=useState("all"),[v,b]=useState(""),[S,k]=useState(null),[w,E]=useState("all"),[x,P]=useState(""),[C,I]=useState(null),R=useRef(null);
 const T={type:"expense",person:"Erdal",amount:"",note:"",date:new Date().toISOString().split("T")[0]};
 const[_,A]=useState(T);
 useEffect(()=>{localStorage.setItem("wallet_data",JSON.stringify(e))},[e]);
@@ -86,4 +87,3 @@ const root=ReactDOM.createRoot(document.getElementById("root"));root.render(Reac
 </script>
 </body>
 </html>
-```
