@@ -273,18 +273,7 @@ function syncAndRender(type) {
 
   init();
 </script>
-  // Service Worker Kayıt Kodu
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(registration => {
-        console.log('Cüzdan Pro: Offline mod başarıyla aktif edildi!', registration.scope);
-      })
-      .catch(err => {
-        console.log('Service Worker kaydı başarısız:', err);
-      });
-  });
-}
+
   
 </body>
 </html>
