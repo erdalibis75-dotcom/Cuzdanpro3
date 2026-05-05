@@ -1,0 +1,62 @@
+{
+  "name": "Kasa Pro v2.1 - Cüzdan Yönetimi",
+  "short_name": "Kasa Pro",
+  "description": "Kişi bazlı alacak ve borç takip uygulaması",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f0f7ff",
+  "theme_color": "#1c65ff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231c65ff' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>₺</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%231c65ff' width='512' height='512'/><text x='50%' y='50%' font-size='250' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>₺</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "finance"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f0f7ff' width='540' height='720'/><rect fill='%231c65ff' width='540' height='200' rx='20'/><text x='50%' y='100' font-size='48' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>KASA</text></svg>",
+      "sizes": "540x720",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "İşlem Ekle",
+      "short_name": "Ekle",
+      "description": "Hızlı şekilde yeni işlem ekle",
+      "url": "/?action=add",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%2348bbfe' width='192' height='192' rx='45'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='central'>➕</text></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Yönetim Paneli",
+      "short_name": "Yönet",
+      "description": "Kişi ve kategori yönetimi",
+      "url": "/?action=settings",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23627d98' width='192' height='192' rx='45'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='central'>⚙️</text></svg>",
+          "sizes": "192x192",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}
