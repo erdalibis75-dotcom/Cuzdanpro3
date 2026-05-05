@@ -2,7 +2,7 @@
   "name": "Kasa Pro v2.1 - Cüzdan Yönetimi",
   "short_name": "Kasa Pro",
   "description": "Kişi bazlı alacak ve borç takip uygulaması",
-  "start_url": "/",
+  "start_url": "cusdanpro3/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
