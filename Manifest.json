@@ -2,7 +2,7 @@
 {
   "name": "Kasa",
   "short_name": "kasa",
-  "description": "Ail ve gider takip uygulaması",
+  "description": " gider takip uygulaması",
   "start_url": "/index.html",
   "scope": "/index.html/",
   "display": "standalone",
