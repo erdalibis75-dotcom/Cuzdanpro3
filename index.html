@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Kasa Pro v2</title>
+<link href="https://googleapis.com" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: #f0f7ff; color: #334e68; padding: 10px; padding-bottom: 120px; }
+    .pos { color: #2d6a4f !important; font-weight: 900; } 
+    .neg { color: #ba1200 !important; font-weight: 900; } 
+    .amt-navy { color: #102a43 !important; font-weight: 900; font-size: 13px; } 
+    .overdue-orange { color: #f97316 !important; font-weight: 900; } 
+    .card { background: #ffffff; border-radius: 20px; padding: 15px; border: 1px solid #d1e9ff; margin-bottom: 12px; box-shadow: 0 4px 10px rgba(180, 215, 255, 0.2); text-align: center;}
+    .main-total-card { border: none; background: linear-gradient(135deg, #48bbfe, #1c65ff); color: white; }
+    .main-total-card h1 { color: white !important; font-size: 32px; margin: 5px 0; }
+    .split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+    .column-title { font-size: 9px; font-weight: 900; text-transform: uppercase; margin: 8px 0; color: #627d98; text-align: center; }
+    .tx-row { background: #ffffff; border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid #e1efff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; position: relative; text-align: left;}
+    .tx-row b { font-size: 11px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tx-row small { font-size: 9px; opacity: 0.7; }
+    .input-field { width: 100%; background: #ffffff; border-radius: 14px; padding: 14px; color: #102a43; border: 2px solid #d1e9ff; margin-bottom: 10px; font-size: 14px; outline: none; font-weight: 700; }
+    .btn-save { background: #1c65ff; color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 900; cursor: pointer; }
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; display: flex; justify-content: space-around; padding: 10px; border-top: 2px solid #d1e9ff; z-index: 1000; }
+    .hidden { display: none !important; }
+    .manage-item { display: flex; justify-content: space-between; padding: 10px; background: #f8fbff; border-radius: 12px; margin-bottom: 5px; border: 1px solid #d1e9ff; font-size: 12px; align-items: center; }
+    label { display: block; font-size: 9px; font-weight: 900; color: #1c65ff; margin-bottom: 4px; margin-left: 4px; text-transform: uppercase; text-align: left;}
+</style>
+</head>
+<body>
+
+<div id="home-view">
+  <div class="card main-total-card">
+    <div style="font-size:10px; opacity:0.9; font-weight:900">KASA (NAKİT DURUMU)</div>
+    <h1 id="global-balance">0 ₺</h1>
+    <div id="global-aud" style="font-weight:800; font-size:12px; opacity:0.8">≈ 0 AUD</div>
+  </div>
+
+  <select id="main-person-filter" class="input-field" style="border-color: #48bbfe; margin-top:10px;" onchange="selectPerson(this.value)"></select>
+
+  <div id="person-detail-area" class="hidden">
+    <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+       <select id="month-filter" class="input-field" style="flex: 1; padding: 8px; font-size: 11px;" onchange="renderHome()"></select>
+       <select id="cat-search-filter" class="input-field" style="flex: 1; padding: 8px; font-size: 11px;" onchange="renderHome()"></select>
+    </div>
+    
+    <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 12px;">
+      <input type="text" id="search-input" placeholder="Ara..." class="input-field" style="flex: 2; margin-bottom: 0;" oninput="renderHome()">
+      <div style="flex: 1; background:#f0f7ff; border:2px solid #48bbfe; border-radius:12px; padding:6px; text-align:center;">
+        <div style="font-size:7px; font-weight:900; color:#1c65ff;">KİŞİ NET ÖZET</div>
+        <div id="search-total-val" class="amt-navy" style="font-size:11px;">0 ₺</div>
+      </div>
+    </div>
+
+    <div class="split-container">
+      <div class="column-title">ALACAKLAR (+)</div>
+      <div class="column-title">BORÇLAR (-)</div>
+    </div>
+
+    <div class="split-container">
+      <div id="income-column"></div>
+      <div id="expense-column"></div>
+    </div>
+  </div>
+  <button class="btn-save" style="background:#f0f7ff; color:#1c65ff; border:1px dashed #48bbfe; margin-top:15px; font-size:11px; padding:12px;" onclick="showView('settings')">⚙️ YÖNETİM VE YEDEKLEME</button>
+</div>
+
+<div id="settings-view" class="hidden">
+  <h2 style="text-align:center; color:#1c65ff; margin:15px 0; font-size:18px;">Ayarlar</h2>
+  <div class="card"><label>KİŞİLER</label><div id="manage-people-list"></div><button class="btn-save" onclick="addNewItem('person')">+ EKLE</button></div>
+  <div class="card"><label>ALACAK TÜRLERİ</label><div id="manage-cats-income"></div><button class="btn-save" onclick="addNewItem('category', 'income')">+ EKLE</button></div>
+  <div class="card"><label>BORÇ TÜRLERİ</label><div id="manage-cats-expense"></div><button class="btn-save" onclick="addNewItem('category', 'expense')">+ EKLE</button></div>
+  <div class="card" style="background: #eef7ff;"><label>💾 YEDEKLEME</label>
+    <div style="display:flex; gap:5px; margin-top:5px;">
+        <button class="btn-save" style="background:#627d98; flex:1;" onclick="exportJSON()">📥 İNDİR</button>
+        <button class="btn-save" style="background:#627d98; flex:1;" onclick="document.getElementById('import-file').click()">📤 YÜKLE</button>
+    </div>
+    <input type="file" id="import-file" class="hidden" onchange="importJSON(event)">
+  </div>
+  <button class="btn-save" style="background:#334e68" onclick="goHome()">GERİ DÖN</button>
+</div>
+
+<div id="add-view" class="hidden">
+  <h2 style="text-align:center; color:#1c65ff; margin:15px 0; font-size:18px;">İşlem Kaydı</h2>
+  <label>TÜR</label><select id="f-type" class="input-field" onchange="updateFormCats()"><option value="income">ALACAK (+)</option><option value="expense">BORÇ (-)</option></select>
+  <label>KİŞİ</label><select id="f-person" class="input-field"></select>
+  <label>KATEGORİ</label><select id="f-category" class="input-field"></select>
+  <div style="display: flex; gap: 8px;"><div style="flex: 1;"><label>TARİH</label><input type="date" id="f-date" class="input-field"></div><div style="flex: 1;"><label>VADE (OPSİYONEL)</label><input type="date" id="f-due-date" class="input-field"></div></div>
+  <label>TUTAR (₺)</label><input type="number" id="f-amount" placeholder="0.00" class="input-field">
+  <label>AÇIKLAMA</label><input type="text" id="f-note" placeholder="Not..." class="input-field">
+  <button class="btn-save" onclick="addTx()">KAYDET</button>
+  <button id="del-btn" class="hidden" onclick="deleteCurrent()" style="width:100%; background:#fff; color:red; border:1px solid red; padding:12px; border-radius:14px; margin-top:10px; font-weight:900;">SİL</button>
+  <button onclick="goHome()" style="width:100%; background:none; border:none; color:#627d98; margin-top:15px; font-weight:900; font-size:11px;">İPTAL</button>
+</div>
+
+<div class="nav-bar">
+  <div onclick="goHome()" style="text-align:center; cursor:pointer"><div style="font-size:20px">🏠</div><div style="font-size:9px; font-weight:800; color:#1c65ff">ANA SAYFA</div></div>
+  <div onclick="showView('add')" style="text-align:center; cursor:pointer"><div style="font-size:20px">➕</div><div style="font-size:9px; font-weight:800; color:#1c65ff">İŞLEM EKLE</div></div>
+</div>
+
+<script>
+  // v2 VERİTABANI ANAHTARLARI
+  let txs = JSON.parse(localStorage.getItem('txs_sky_v2') || '[]');
+  let config = JSON.parse(localStorage.getItem('cfg_sky_v2') || '{"people":[], "categories":{"income":[], "expense":[]}}');
+  const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  let activeTab = null, rate = 0.0318, editId = null;
+
+  function init() { updateDropdowns(); renderHome(); renderSettings(); }
+
+  function updateDropdowns() {
+    const mainP = document.getElementById('main-person-filter');
+    const formP = document.getElementById('f-person');
+    let pOpts = '<option value="">Kişi Seçiniz...</option>';
+    config.people.forEach(p => pOpts += `<option value="${p}">${p}</option>`);
+    mainP.innerHTML = pOpts; formP.innerHTML = pOpts; updateFormCats();
+  }
+
+  function updateFormCats() {
+    const type = document.getElementById('f-type').value;
+    const catSelect = document.getElementById('f-category');
+    let cOpts = ""; 
+    (config.categories[type] || []).forEach(c => cOpts += `<option value="${c}">${c}</option>`);
+    catSelect.innerHTML = cOpts || '<option value="">Kategori Yok</option>';
+  }
+
+  function selectPerson(val) { activeTab = val; renderHome(); }
+
+  function renderHome() {
+    const mFilter = document.getElementById('month-filter').value;
+    const cFilter = document.getElementById('cat-search-filter').value;
+    const sInput = document.getElementById('search-input').value.toLowerCase();
+    const today = new Date().toISOString().split('T')[0];
+
+    // 1. GENEL KASA (Sadece vadesi olmayanlar nakit sayılır)
+    const globalBal = txs.filter(t => !t.dueDate).reduce((acc, t) => t.type === 'income' ? acc + t.amount : acc - t.amount, 0);
+    document.getElementById('global-balance').innerText = globalBal.toLocaleString('tr-TR') + " ₺";
+    document.getElementById('global-aud').innerText = "≈ " + (globalBal * rate).toFixed(2) + " AUD";
+
+    if (activeTab) {
+      document.getElementById('person-detail-area').classList.remove('hidden');
+      let pData = txs.filter(t => t.person === activeTab);
+      
+      // Filtreleri Güncelle
+      let mOpts = '<option value="Hepsi">Tüm Zamanlar</option>';
+      [...new Set(pData.map(t => { const d = new Date(t.date); return `${months[d.getMonth()]} ${d.getFullYear()}`; }))].forEach(m => mOpts += `<option value="${m}">${m}</option>`);
+      document.getElementById('month-filter').innerHTML = mOpts;
+
+      let cOpts = '<option value="all">Tümü</option>';
+      [...new Set(pData.map(t => t.category))].forEach(c => cOpts += `<option value="${c}">${c}</option>`);
+      document.getElementById('cat-search-filter').innerHTML = cOpts;
+
+      let pFiltered = pData.filter(t => {
+        const d = new Date(t.date);
+        const mStr = `${months[d.getMonth()]} ${d.getFullYear()}`;
+        return (mFilter === "Hepsi" || mStr === mFilter) && (cFilter === "all" || t.category === cFilter) && (t.note || "").toLowerCase().includes(sInput);
+      });
+
+      // 2. KİŞİ NET ÖZETİ (Senin istediğin özel mantık)
+      const personNet = pFiltered.reduce((acc, t) => {
+          if (t.type === 'income') return acc + t.amount; // Alacak: Vadesiz de olsa vadeli de olsa nete ekle
+          else return t.dueDate ? acc : acc - t.amount; // Borç: Sadece vadesizse netten düş
+      }, 0);
+      document.getElementById('search-total-val').innerText = personNet.toLocaleString('tr-TR') + " ₺";
+
+      const incCol = document.getElementById('income-column');
+      const expCol = document.getElementById('expense-column');
+      incCol.innerHTML = ""; expCol.innerHTML = "";
+
+      pFiltered.forEach(t => {
+        const isWaiting = !!t.dueDate;
+        const isOverdue = isWaiting && t.dueDate <= today;
+        let colorClass = t.type === 'income' ? 'pos' : 'neg';
+        if(isOverdue) colorClass = 'overdue-orange';
+        
+        // Meta kategorisi için özel mor kenarlık
+        const metaStyle = t.category === "Meta" ? "border-left: 4px solid #7c3aed;" : "";
+
+        const html = `
+          <div class="tx-row" onclick="prepareEdit(${t.id})" style="${metaStyle}">
+            <b class="${colorClass}">${t.note || 'İsimsiz'}</b>
+            <small>${t.category} • ${t.date}</small>
+            ${isWaiting ? `<small class="${isOverdue ? 'overdue-orange' : 'amt-navy'}">📅 Vade: ${t.dueDate}</small>` : ''}
+            <div class="${isOverdue ? 'overdue-orange' : 'amt-navy'}"><b>${(t.type === 'income' ? '' : '-') + t.amount.toLocaleString('tr-TR')}₺</b></div>
+          </div>`;
+        
+        if(t.type === 'income') incCol.innerHTML += html;
+        else expCol.innerHTML += html;
+      });
+    } else { document.getElementById('person-detail-area').classList.add('hidden'); }
+  }
+
+  function addTx() {
+    const amt = document.getElementById('f-amount').value;
+    const pers = document.getElementById('f-person').value;
+    if(!amt || !pers) return alert("Kişi ve Tutar şart!");
+    const data = { id: editId || Date.now(), type: document.getElementById('f-type').value, person: pers, category: document.getElementById('f-category').value, date: document.getElementById('f-date').value || new Date().toISOString().split('T')[0], dueDate: document.getElementById('f-due-date').value, amount: parseFloat(amt), note: document.getElementById('f-note').value };
+    if(editId) txs = txs.map(t => t.id === editId ? data : t); else txs.unshift(data);
+    saveAll(); goHome();
+  }
+
+  function prepareEdit(id) {
+    const t = txs.find(x => x.id === id); editId = id; showView('add');
+    document.getElementById('f-type').value = t.type; updateFormCats();
+    document.getElementById('f-person').value = t.person; document.getElementById('f-category').value = t.category;
+    document.getElementById('f-date').value = t.date; document.getElementById('f-due-date').value = t.dueDate || "";
+    document.getElementById('f-amount').value = t.amount; document.getElementById('f-note').value = t.note;
+    document.getElementById('del-btn').classList.remove('hidden');
+  }
+
+  function deleteCurrent() { if(confirm("Silinsin mi?")) { txs = txs.filter(t => t.id !== editId); saveAll(); goHome(); } }
+
+  function renderSettings() {
+    const pList = document.getElementById('manage-people-list'); pList.innerHTML = "";
+    config.people.forEach((p, i) => pList.innerHTML += `<div class="manage-item"><span>${p}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('person', ${i})">SİL</button></div>`);
+    ['income', 'expense'].forEach(type => {
+      const cList = document.getElementById('manage-cats-' + type); cList.innerHTML = "";
+      config.categories[type].forEach((c, i) => cList.innerHTML += `<div class="manage-item"><span>${c}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('category', ${i}, '${type}')">SİL</button></div>`);
+    });
+  }
+
+  function addNewItem(type, catType) { const name = prompt("İsim:"); if(name) { if(type === 'person') config.people.push(name); else config.categories[catType].push(name); saveCfg(); } }
+  function removeItem(type, index, catType) { if(confirm("Silinsin mi?")) { if(type === 'person') config.people.splice(index, 1); else config.categories[catType].splice(index, 1); saveCfg(); } }
+  function saveCfg() { localStorage.setItem('cfg_sky_v2', JSON.stringify(config)); updateDropdowns(); renderSettings(); renderHome(); }
+  function saveAll() { localStorage.setItem('txs_sky_v2', JSON.stringify(txs)); renderHome(); }
+  function showView(v) { ['home', 'add', 'settings'].forEach(x => document.getElementById(x + '-view').classList.add('hidden')); document.getElementById(v + '-view').classList.remove('hidden'); }
+  function goHome() { editId = null; activeTab = null; document.getElementById('main-person-filter').value = ""; document.getElementById('del-btn').classList.add('hidden'); showView('home'); renderHome(); }
+  
+  function exportJSON() { const data = { txs, config }; const blob = new Blob([JSON.stringify(data)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "cuzdan_yedek_v2.json"; a.click(); }
+  function importJSON(e) { const r = new FileReader(); r.onload = (x) => { try { const data = JSON.parse(x.target.result); txs = data.txs; config = data.config; localStorage.setItem('txs_sky_v2', JSON.stringify(txs)); localStorage.setItem('cfg_sky_v2', JSON.stringify(config)); location.reload(); } catch(err) { alert("Hata!"); } }; r.readAsText(e.target.files); }
+
+  init();
+</script>
+</body>
+</html>
