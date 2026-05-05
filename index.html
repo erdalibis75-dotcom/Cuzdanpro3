@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1c65ff">
+<meta name="description" content="Kişi bazlı alacak ve borç takip uygulaması">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231c65ff' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>₺</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231c65ff' width='192' height='192' rx='45'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>₺</text></svg>">
 <title>Kasa Pro v2.1 - Localhost Fix</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -21,7 +26,7 @@
     .back-btn { position: absolute; left: 15px; top: 15px; background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
     .split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
     .column-title { font-size: 9px; font-weight: 900; text-transform: uppercase; margin: 8px 0; color: #627d98; text-align: center; }
-    .tx-row { background: #ffffff; border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid #e1efff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; position: relative; text-align: left; transition: transform 0.1s; }
+    .tx-row { background: #ffffff; border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid #e1efff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; position: relative; }
     .tx-row:active { transform: scale(0.98); }
     .input-field { width: 100%; background: #ffffff; border-radius: 14px; padding: 14px; color: #102a43; border: 2px solid #d1e9ff; margin-bottom: 10px; font-size: 14px; outline: none; font-weight: 700; }
     .btn-save { background: #1c65ff; color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 900; cursor: pointer; }
@@ -33,9 +38,19 @@
     .hidden { display: none !important; }
     .manage-item { display: flex; justify-content: space-between; padding: 10px; background: #f8fbff; border-radius: 12px; margin-bottom: 5px; border: 1px solid #d1e9ff; font-size: 12px; align-items: center; }
     label { display: block; font-size: 9px; font-weight: 900; color: #1c65ff; margin-bottom: 4px; margin-left: 4px; text-transform: uppercase; text-align: left;}
+    .install-banner { background: linear-gradient(135deg, #48bbfe, #1c65ff); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .install-banner button { background: white; color: #1c65ff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; cursor: pointer; }
 </style>
 </head>
 <body>
+
+<div id="install-prompt" class="install-banner hidden">
+  <div>
+    <div style="font-weight: 900; margin-bottom: 4px;">📱 Uygulama Olarak Yükle</div>
+    <small>Kasa Pro'yu telefonunuza uygulama gibi ekleyin</small>
+  </div>
+  <button onclick="installApp()">YÜKle</button>
+</div>
 
 <div id="home-view">
   <div class="card main-total-card">
@@ -93,7 +108,7 @@
   <label>TUTAR (₺)</label><input type="number" id="f-amount" placeholder="0.00" class="input-field">
   <label>AÇIKLAMA</label><input type="text" id="f-note" placeholder="Not..." class="input-field">
   <button class="btn-save" id="save-btn" onclick="addTx()">KAYDET</button>
-  <button id="del-btn" class="hidden" onclick="deleteCurrent()" style="width:100%; background:#fff; color:red; border:1px solid red; padding:12px; border-radius:14px; margin-top:10px; font-weight:900;">SİL</button>
+  <button id="del-btn" class="hidden" onclick="deleteCurrent()" style="width:100%; background:#fff; color:red; border:1px solid red; padding:12px; border-radius:14px; margin-top:10px; font-weight:900; cursor:pointer;">🗑️ SİL</button>
 </div>
 
 <div class="nav-bar">
@@ -108,6 +123,47 @@
   const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
   let activeTab = null, rate = 0.0318, editId = null;
   let viewStack = ['home'];
+  let deferredPrompt = null;
+
+  // Service Worker Kaydı
+  function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('✅ Service Worker başarıyla kaydedildi:', registration);
+        })
+        .catch(error => {
+          console.log('❌ Service Worker kaydı başarısız:', error);
+        });
+    }
+  }
+
+  // PWA Install Prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-prompt').classList.remove('hidden');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    console.log('✅ Uygulama kuruldu');
+    document.getElementById('install-prompt').classList.add('hidden');
+    deferredPrompt = null;
+  });
+
+  function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choiceResult => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ Kullanıcı uygulamayı kurdu');
+        } else {
+          console.log('❌ Kullanıcı uygulamayı kurmaktan vazgeçti');
+        }
+        deferredPrompt = null;
+      });
+    }
+  }
 
   function loadData() {
     try {
@@ -120,6 +176,7 @@
   }
 
   function init() { 
+    registerServiceWorker();
     loadData();
     updateDropdowns(); 
     renderHome(); 
@@ -286,10 +343,10 @@
   
   function renderSettings() {
     const pList = document.getElementById('manage-people-list'); pList.innerHTML = "";
-    config.people.forEach((p, i) => pList.innerHTML += `<div class="manage-item"><span>${p}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('person', ${i})">SİL</button></div>`);
+    config.people.forEach((p, i) => pList.innerHTML += `<div class="manage-item"><span>${p}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('person',${i})">✕</button></div>`);
     ['income', 'expense'].forEach(type => {
       const cList = document.getElementById('manage-cats-' + type); cList.innerHTML = "";
-      (config.categories[type] || []).forEach((c, i) => cList.innerHTML += `<div class="manage-item"><span>${c}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('category', ${i}, '${type}')">SİL</button></div>`);
+      (config.categories[type] || []).forEach((c, i) => cList.innerHTML += `<div class="manage-item"><span>${c}</span><button style="color:red; border:none; background:none; font-weight:900" onclick="removeItem('category',${i},'${type}')">✕</button></div>`);
     });
   }
   
@@ -350,7 +407,6 @@
     return;
   }
 
-  // Dosya uzantısı kontrolü
   if (!file.name.endsWith('.json')) {
     alert("Lütfen sadece .json uzantılı yedek dosyasını seçin!");
     return;
@@ -358,23 +414,19 @@
 
   const reader = new FileReader();
 
-  // Okuma başladığında
   reader.onload = (event) => {
     try {
       const content = event.target.result;
       const data = JSON.parse(content);
 
-      // Veri yapısı kontrolü (txs ve config var mı?)
       if (data && data.txs && data.config) {
         if (confirm("Dikkat: Mevcut verileriniz silinecek ve seçtiğiniz yedek yüklenecek. Onaylıyor musunuz?")) {
           
-          // LocalStorage'a yazma
           localStorage.setItem('txs_sky_v2', JSON.stringify(data.txs));
           localStorage.setItem('cfg_sky_v2', JSON.stringify(data.config));
 
           alert("Veriler başarıyla içe aktarıldı! Uygulama yenileniyor...");
           
-          // GitHub'da bazen cache sorunu olmaması için sert yenileme
           window.location.reload(true); 
         }
       } else {
@@ -386,7 +438,6 @@
     }
   };
 
-  // Okuma hatası kontrolü
   reader.onerror = () => {
     alert("Dosya okunurken bir donanım/erişim hatası oluştu!");
   };
