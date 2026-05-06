@@ -7,7 +7,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1c65ff">
 <meta name="description" content="Kişisel gelir ve gider takip uygulaması">
+<meta name="apple-mobile-web-app-title" content="Kasa Pro">
 <title>Kasa Pro</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231c65ff' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>₺</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -22,7 +25,7 @@
     .back-btn { position: absolute; left: 15px; top: 15px; background: rgba(255,255,255,0.2); color: white; border: none; padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: 900; cursor: pointer; }
     .split-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
     .column-title { font-size: 9px; font-weight: 900; text-transform: uppercase; margin: 8px 0; color: #627d98; text-align: center; }
-    .tx-row { background: #ffffff; border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid #e1efff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; position: relative; text-align: left; transition: transform 0.1s; }
+    .tx-row { background: #ffffff; border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid #e1efff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; position: relative; }
     .tx-row:active { transform: scale(0.98); }
     .input-field { width: 100%; background: #ffffff; border-radius: 14px; padding: 14px; color: #102a43; border: 2px solid #d1e9ff; margin-bottom: 10px; font-size: 14px; outline: none; font-weight: 700; }
     .btn-save { background: #1c65ff; color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 900; cursor: pointer; font-size: 14px; }
@@ -43,11 +46,11 @@
 
     /* Kur güncelleme */
     .rate-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; justify-content: center; }
-    .rate-input { width: 80px; border: 1px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 3px 6px; font-size: 11px; font-weight: 700; color: white; background: rgba(255,255,255,0.2); text-align: center; outline: none; }
+    .rate-input { width: 80px; border: 1px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 3px 6px; font-size: 11px; font-weight: 700; color: white; background: rgba(255,255,255,0.2); text-align: center; }
     .rate-btn { background: rgba(255,255,255,0.25); color: white; border: none; border-radius: 8px; padding: 3px 8px; font-size: 11px; font-weight: 900; cursor: pointer; }
 
     /* Toast bildirimi */
-    #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #102a43; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+    #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #102a43; color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 700; z-index: 999; opacity: 0; transition: opacity 0.3s; }
     #toast.show { opacity: 1; }
 </style>
 </head>
@@ -171,7 +174,7 @@
   <label>AÇIKLAMA</label>
   <input type="text" id="f-note" placeholder="Not..." class="input-field" maxlength="100">
   <button class="btn-save" id="save-btn" onclick="addTx()">KAYDET</button>
-  <button id="del-btn" class="hidden" onclick="deleteCurrent()" style="width:100%; background:#fff; color:red; border:1px solid red; padding:12px; border-radius:14px; margin-top:10px; font-weight:900;">🗑 SİL</button>
+  <button id="del-btn" class="hidden" onclick="deleteCurrent()" style="width:100%; background:#fff; color:red; border:1px solid red; padding:12px; border-radius:14px; margin-top:10px; font-weight:900;">SİL</button>
 </div>
 
 <!-- ALT NAVİGASYON -->
@@ -209,6 +212,18 @@
     updateDropdowns();
     renderHome();
     renderSettings();
+    registerServiceWorker();
+  }
+
+  // ── Service Worker Kaydı ──────────────────────────────────────
+  function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('Service Worker kaydı başarılı:', reg);
+      }).catch(err => {
+        console.log('Service Worker kaydı başarısız:', err);
+      });
+    }
   }
 
   // ── Kur Güncelleme ────────────────────────────────────────────
