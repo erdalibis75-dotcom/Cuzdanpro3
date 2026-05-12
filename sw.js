@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kasa-pro-v7';
+const CACHE_NAME = 'kasa-pro-v8';
 const BASE = '/cuzdanpro3';
 const urlsToCache = [
   BASE + '/',
